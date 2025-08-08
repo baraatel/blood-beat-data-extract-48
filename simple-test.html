@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Test</title>
+</head>
+<body>
+    <h1>Simple Edge Function Test</h1>
+    <button onclick="testSimple()">Test Simple</button>
+    <div id="result"></div>
+
+    <script>
+        async function testSimple() {
+            const SUPABASE_URL = "https://btlwicqylyyrjonxumjt.supabase.co";
+            const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0bHdpY3F5bHl5cmpvbnh1bWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2ODM0NDAsImV4cCI6MjA3MDI1OTQ0MH0.k1WDcd3tS6jm0Rp9xq3dsR-Ze90tBjs_n-sKjeo4EFg";
+            
+            try {
+                document.getElementById('result').innerHTML = 'Testing...';
+                
+                // First, let's test if we can reach the Supabase URL
+                const testResponse = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_PUBLISHABLE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+                    }
+                });
+                
+                document.getElementById('result').innerHTML = `
+                    <pre>
+Supabase URL Test:
+Status: ${testResponse.status}
+Status Text: ${testResponse.statusText}
+                    </pre>
+                `;
+                
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <pre>
+Error: ${error.message}
+                    </pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

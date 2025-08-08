@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test "mid" OCR Fix</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-case { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .input { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 3px; }
+        .output { background: #e8f5e8; padding: 10px; margin: 10px 0; border-radius: 3px; }
+        .error { background: #ffe8e8; padding: 10px; margin: 10px 0; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>Test "mid" OCR Misread Fix</h1>
+    <p>This test demonstrates the fix for when OCR misreads "7m" as "mid".</p>
+
+    <div class="test-case">
+        <h3>Test Case 1: "mid" (OCR misread of "7m")</h3>
+        <div class="input">Input: "citizen mid pm 3:09"</div>
+        <div id="result1" class="output">Testing...</div>
+    </div>
+
+    <div class="test-case">
+        <h3>Test Case 2: "7m" (correct OCR)</h3>
+        <div class="input">Input: "citizen 7m 3d am 9:51"</div>
+        <div id="result2" class="output">Testing...</div>
+    </div>
+
+    <div class="test-case">
+        <h3>Test Case 3: "cm" (OCR misread)</h3>
+        <div class="input">Input: "citizen cm 13d am 11:25"</div>
+        <div id="result3" class="output">Testing...</div>
+    </div>
+
+    <div class="test-case">
+        <h3>Test Case 4: "c1" (OCR misread)</h3>
+        <div class="input">Input: "citizen c1 9d am 11:25"</div>
+        <div id="result4" class="output">Testing...</div>
+    </div>
+
+    <div class="test-case">
+        <h3>Test Case 5: Complex case with "mid"</h3>
+        <div class="input">Input: "g citizen mid pm 3:09 167 sys mmhg dia 85 mmhg m 65 pulse"</div>
+        <div id="result5" class="output">Testing...</div>
+    </div>
+
+    <script>
+        // Simulate the improved OCR correction logic
+        function testMidFix(text) {
+            const processedText = text
+                .replace(/\s+/g, ' ')
+                .replace(/[^\w\s\/\-\:\.]/g, ' ')
+                .replace(/\b0(\d)\b/g, '$1')
+                .replace(/\bsys(\d{2,3})\b/gi, 'sys $1')
+                .replace(/\bdia(\d{2,3})\b/gi, 'dia $1')
+                .replace(/\bs(\d{2,3})\b/gi, 's $1')
+                .replace(/\bd(\d{2,3})\b/gi, 'd $1')
+                .replace(/\bminig\b/gi, 'mmhg')
+                .replace(/\b1\+\b/g, '')
+                .replace(/\b\+\b/g, '')
+                .replace(/\b%\b/g, '')
+                .replace(/\bcm\b/gi, '7m')
+                .replace(/\bc1\b/gi, '7m')
+                .replace(/\bc9\b/gi, '7m')
+                .replace(/\bmid\b/gi, '7m')  // NEW FIX
+                .toLowerCase();
+
+            console.log('Processed text:', processedText);
+
+            let month = 0;
+            let day = 0;
+
+            // Enhanced month patterns
+            const monthPatterns = [
+                /\b(\d{1,2})\s*(?:month|mo|m)\b/i,
+                /\b(?:month|mo|m)\s*(\d{1,2})\b/i,
+                /\b(\d{1,2})m\b/i,
+                /\b(?:cm|7m|mid)\b/i,  // UPDATED PATTERN
+                /\b(\d{1,2})\s*\/\s*\d{1,2}\b/i,
+                /\b(\d{1,2})\s*-\s*\d{1,2}\b/i,
+            ];
+
+            // Enhanced day patterns
+            const dayPatterns = [
+                /\b(\d{1,2})\s*(?:day|d)\b/i,
+                /\b(?:day|d)\s*(\d{1,2})\b/i,
+                /\b(\d{1,2})d\b/i,
+                /\b(\d{1,2})\s*\/\s*\d{1,2}\b/i,
+                /\b(\d{1,2})\s*-\s*\d{1,2}\b/i,
+            ];
+
+            // Test month patterns
+            for (const pattern of monthPatterns) {
+                const match = processedText.match(pattern);
+                if (match) {
+                    if (pattern.source.includes('cm|7m|mid')) {
+                        month = 7;
+                        console.log('Found month from OCR correction (cm/7m/mid):', month);
+                        break;
+                    } else {
+                        const value = Number(match[1]);
+                        if (value >= 1 && value <= 12) {
+                            month = value;
+                            console.log('Found month:', month, 'using pattern:', pattern);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Test day patterns
+            for (const pattern of dayPatterns) {
+                const match = processedText.match(pattern);
+                if (match) {
+                    const value = Number(match[1]);
+                    if (value >= 1 && value <= 31) {
+                        day = value;
+                        console.log('Found day:', day, 'using pattern:', pattern);
+                        break;
+                    }
+                }
+            }
+
+            // OCR correction for common misreads
+            if (!month || !day) {
+                const ocrDateCorrections = {
+                    'cm': 7, 'c1': 7, 'c9': 7, 'mid': 7,
+                    '1d': 1, '9d': 9, '13d': 13,
+                };
+                
+                for (const [misread, value] of Object.entries(ocrDateCorrections)) {
+                    if (processedText.includes(misread)) {
+                        if ((misread.startsWith('c') || misread === 'mid') && !month) {
+                            month = value;
+                            console.log('Found month from OCR correction:', month, 'from pattern:', misread);
+                        } else if (misread.endsWith('d') && !day) {
+                            day = value;
+                            console.log('Found day from OCR correction:', day, 'from pattern:', misread);
+                        }
+                    }
+                }
+            }
+
+            return { month, day, processedText };
+        }
+
+        // Run tests
+        const testCases = [
+            { input: "citizen mid pm 3:09", id: "result1" },
+            { input: "citizen 7m 3d am 9:51", id: "result2" },
+            { input: "citizen cm 13d am 11:25", id: "result3" },
+            { input: "citizen c1 9d am 11:25", id: "result4" },
+            { input: "g citizen mid pm 3:09 167 sys mmhg dia 85 mmhg m 65 pulse", id: "result5" },
+        ];
+
+        testCases.forEach(testCase => {
+            const result = testMidFix(testCase.input);
+            const element = document.getElementById(testCase.id);
+            element.innerHTML = `
+                <strong>Processed:</strong> ${result.processedText}<br>
+                <strong>Month:</strong> ${result.month || 'Not found'}<br>
+                <strong>Day:</strong> ${result.day || 'Not found'}<br>
+                <strong>Status:</strong> ${result.month ? '✅ SUCCESS' : '❌ FAILED'}
+            `;
+        });
+    </script>
+</body>
+</html>

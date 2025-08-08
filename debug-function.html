@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Edge Function</title>
+</head>
+<body>
+    <h1>Debug Edge Function</h1>
+    <button onclick="testFunction()">Test Function</button>
+    <div id="result"></div>
+
+    <script>
+        async function testFunction() {
+            const SUPABASE_URL = "https://btlwicqylyyrjonxumjt.supabase.co";
+            const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0bHdpY3F5bHl5cmpvbnh1bWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2ODM0NDAsImV4cCI6MjA3MDI1OTQ0MH0.k1WDcd3tS6jm0Rp9xq3dsR-Ze90tBjs_n-sKjeo4EFg";
+            
+            try {
+                document.getElementById('result').innerHTML = 'Testing...';
+                
+                console.log('Making request to:', `${SUPABASE_URL}/functions/v1/vision-extract`);
+                
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/vision-extract`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+                        'apikey': SUPABASE_PUBLISHABLE_KEY
+                    },
+                    body: JSON.stringify({
+                        imageBase64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+                        mimeType: "image/png"
+                    })
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                const result = await response.json();
+                console.log('Response body:', result);
+                
+                document.getElementById('result').innerHTML = `
+                    <pre>
+Status: ${response.status}
+Status Text: ${response.statusText}
+Headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}
+Response: ${JSON.stringify(result, null, 2)}
+                    </pre>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = `
+                    <pre>
+Error: ${error.message}
+Stack: ${error.stack}
+                    </pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

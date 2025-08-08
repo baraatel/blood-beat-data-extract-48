@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Sys + Number Fix</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-case { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .input { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 3px; }
+        .output { background: #e8f5e8; padding: 10px; margin: 10px 0; border-radius: 3px; }
+        .error { background: #ffe8e8; padding: 10px; margin: 10px 0; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>Test Sys + Number Detection Fix</h1>
+    <p>This test demonstrates the improved pattern matching for cases where numbers are very close to "sys" or "dia".</p>
+
+    <div class="test-case">
+        <h3>Test Case 1: sys1 (number directly attached)</h3>
+        <div class="input">Input: "sys144"</div>
+        <div id="result1" class="output">Testing...</div>
+    </div>
+
+    <div class="test-case">
+        <h3>Test Case 2: sys 144 (with space)</h3>
+        <div class="input">Input: "sys 144"</div>
+        <div id="result2" class="output">Testing...</div>
+    </div>
+
+    <div class="test-case">
+        <h3>Test Case 3: sys:144 (with colon)</h3>
+        <div class="input">Input: "sys:144"</div>
+        <div id="result3" class="output">Testing...</div>
+    </div>
+
+    <div class="test-case">
+        <h3>Test Case 4: dia72 (diastolic directly attached)</h3>
+        <div class="input">Input: "dia72"</div>
+        <div id="result4" class="output">Testing...</div>
+    </div>
+
+    <div class="test-case">
+        <h3>Test Case 5: Complex case with sys1 and dia72</h3>
+        <div class="input">Input: "sys144 dia72 pulse76"</div>
+        <div id="result5" class="output">Testing...</div>
+    </div>
+
+    <script>
+        // Simulate the improved pattern matching logic
+        function testPatternMatching(text) {
+            const processedText = text
+                .replace(/\s+/g, ' ')
+                .replace(/[^\w\s\/\-\:\.]/g, ' ')
+                .replace(/\b0(\d)\b/g, '$1')
+                .replace(/\bsys(\d{2,3})\b/gi, 'sys $1')
+                .replace(/\bdia(\d{2,3})\b/gi, 'dia $1')
+                .replace(/\bs(\d{2,3})\b/gi, 's $1')
+                .replace(/\bd(\d{2,3})\b/gi, 'd $1')
+                .toLowerCase();
+
+            console.log('Processed text:', processedText);
+
+            // Enhanced systolic patterns
+            const systolicPatterns = [
+                /\b(?:systolic|sys|s)\s*[:-]?\s*(\d{2,3})\b/i,
+                /\b(?:systolic|sys|s)(\d{2,3})\b/i,
+                /\b(\d{2,3})\s*\/\s*\d{2,3}\b/i,
+                /\b(\d{2,3})\s*(?:systolic|sys|s)\b/i,
+                /\b(?:bp|blood pressure)\s*(\d{2,3})\s*\/\s*\d{2,3}\b/i,
+                /\b(?:top|upper)\s*(\d{2,3})\b/i,
+            ];
+
+            // Enhanced diastolic patterns
+            const diastolicPatterns = [
+                /\b(?:diastolic|dia|d)\s*[:-]?\s*(\d{2,3})\b/i,
+                /\b(?:diastolic|dia|d)(\d{2,3})\b/i,
+                /\b\d{2,3}\s*\/\s*(\d{2,3})\b/i,
+                /\b(\d{2,3})\s*(?:diastolic|dia|d)\b/i,
+                /\b(?:bp|blood pressure)\s*\d{2,3}\s*\/\s*(\d{2,3})\b/i,
+                /\b(?:bottom|lower)\s*(\d{2,3})\b/i,
+            ];
+
+            let sys = 0;
+            let dia = 0;
+
+            // Test systolic patterns
+            for (const pattern of systolicPatterns) {
+                const match = processedText.match(pattern);
+                if (match) {
+                    const value = Number(match[1]);
+                    if (value >= 100 && value <= 250) {
+                        sys = value;
+                        console.log('Found systolic:', sys, 'using pattern:', pattern);
+                        break;
+                    }
+                }
+            }
+
+            // Test diastolic patterns
+            for (const pattern of diastolicPatterns) {
+                const match = processedText.match(pattern);
+                if (match) {
+                    const value = Number(match[1]);
+                    if (value >= 40 && value <= 150) {
+                        dia = value;
+                        console.log('Found diastolic:', dia, 'using pattern:', pattern);
+                        break;
+                    }
+                }
+            }
+
+            // Special OCR correction for sys
+            if (!sys && processedText.includes('sys')) {
+                const sysPatterns = [
+                    /sys(\d{2,3})\b/i,
+                    /sys\s*(\d{2,3})\b/i,
+                    /sys:(\d{2,3})\b/i,
+                    /sys\s*:\s*(\d{2,3})\b/i,
+                ];
+                
+                for (const pattern of sysPatterns) {
+                    const match = processedText.match(pattern);
+                    if (match) {
+                        const value = Number(match[1]);
+                        if (value >= 100 && value <= 250) {
+                            sys = value;
+                            console.log('Found systolic from sys pattern correction:', sys);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Special OCR correction for dia
+            if (!dia && processedText.includes('dia')) {
+                const diaPatterns = [
+                    /dia(\d{2,3})\b/i,
+                    /dia\s*(\d{2,3})\b/i,
+                    /dia:(\d{2,3})\b/i,
+                    /dia\s*:\s*(\d{2,3})\b/i,
+                ];
+                
+                for (const pattern of diaPatterns) {
+                    const match = processedText.match(pattern);
+                    if (match) {
+                        const value = Number(match[1]);
+                        if (value >= 40 && value <= 150) {
+                            dia = value;
+                            console.log('Found diastolic from dia pattern correction:', dia);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return { sys, dia, processedText };
+        }
+
+        // Run tests
+        const testCases = [
+            { input: "sys144", id: "result1" },
+            { input: "sys 144", id: "result2" },
+            { input: "sys:144", id: "result3" },
+            { input: "dia72", id: "result4" },
+            { input: "sys144 dia72 pulse76", id: "result5" },
+        ];
+
+        testCases.forEach(testCase => {
+            const result = testPatternMatching(testCase.input);
+            const element = document.getElementById(testCase.id);
+            element.innerHTML = `
+                <strong>Processed:</strong> ${result.processedText}<br>
+                <strong>Systolic:</strong> ${result.sys || 'Not found'}<br>
+                <strong>Diastolic:</strong> ${result.dia || 'Not found'}<br>
+                <strong>Status:</strong> ${result.sys && result.dia ? '✅ SUCCESS' : '❌ FAILED'}
+            `;
+        });
+    </script>
+</body>
+</html>

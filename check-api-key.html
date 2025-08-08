@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check API Key</title>
+</head>
+<body>
+    <h1>Check API Key Project</h1>
+    <button onclick="checkAPIKey()">Check API Key</button>
+    <div id="result"></div>
+
+    <script>
+        async function checkAPIKey() {
+            const API_KEY = "AIzaSyAAg0-R4vSa52_NLAO_DLGsqoMTdPlpe7s";
+            
+            try {
+                document.getElementById('result').innerHTML = 'Checking API key...';
+                
+                // Test the API key with a simple request
+                const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        requests: [
+                            {
+                                image: { content: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==" },
+                                features: [{ type: "DOCUMENT_TEXT_DETECTION" }],
+                            },
+                        ],
+                    }),
+                });
+                
+                const result = await response.json();
+                
+                document.getElementById('result').innerHTML = `
+                    <pre>
+Status: ${response.status}
+Response: ${JSON.stringify(result, null, 2)}
+                    </pre>
+                `;
+                
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <pre>
+Error: ${error.message}
+                    </pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
